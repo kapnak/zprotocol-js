@@ -1,0 +1,14 @@
+{
+  "name": "zprotocol-js",
+  "version": "1.0.0",
+  "description": "JS implementation of ZProtocol.",
+  "main": "src/zprotocol.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "kapnak",
+  "license": "ISC",
+  "dependencies": {
+    "libsodium-wrappers-sumo": "^0.7.13"
+  }
+}
