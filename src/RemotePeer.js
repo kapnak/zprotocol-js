@@ -1,5 +1,6 @@
 const {randomBytes} = require('crypto');
 const {EventEmitter} = require('events');
+const {Mutex} = require('async-mutex');
 const sodium = require('libsodium-wrappers-sumo')
 const Message = require('./Message');
 
@@ -24,8 +25,11 @@ module.exports = class RemotePeer extends EventEmitter {
         this.replyListeners = {};
         /** @type {{id: Buffer<16>, length: number}|null}*/
         this.metadata = null;
+        let mutex = new Mutex();
 
-        this.socket.on('readable', this._receive.bind(this));
+        this.socket.on('readable', () => {
+            mutex.runExclusive(this._receive.bind(this));
+        });
         this.socket.emit('readable');
 
         this.socket.on('close', () => {
@@ -33,7 +37,7 @@ module.exports = class RemotePeer extends EventEmitter {
         });
     }
 
-    _receive() {
+    async _receive() {
         // Loop until every condition did not change the state.
         while (true) {
 
@@ -61,6 +65,8 @@ module.exports = class RemotePeer extends EventEmitter {
                     this.emit('request', message);
                 }
                 this.emit('message', message);
+
+                this.metadata = null;
                 continue;
             }
             break;

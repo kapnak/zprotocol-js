@@ -9,6 +9,7 @@
   "author": "kapnak",
   "license": "ISC",
   "dependencies": {
+    "async-mutex": "^0.5.0",
     "libsodium-wrappers-sumo": "^0.7.13"
   }
 }
