@@ -43,7 +43,7 @@ async function read_kp(file) {
  * @param {ArrayLike} bytes - The bytes.
  * @return {string} - The base 32 string.
  */
-async function bytesToBs32(bytes){
+function bytesToBs32(bytes){
     return base32.stringify(bytes, {pad: false}).toLowerCase();
 }
 
@@ -52,9 +52,9 @@ async function bytesToBs32(bytes){
  * Decode a base 32 string to byte array.
  * The string needs to follow the RFC 4648.
  * @param {string} string - The base 32 string.
- * @return {Promise<Uint8Array>}
+ * @return {Uint8Array}
  */
-async function bs32toBytes(string) {
+function bs32toBytes(string) {
     return base32.parse(string, {loose: true});
 }
 
