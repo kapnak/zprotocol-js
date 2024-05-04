@@ -20,9 +20,10 @@ function generate_kp() {
  * Read key pair from the given file.
  * If the file doesn't exist, it will be generated with a new key pair.
  * @param {string} file - The file of the secret key (.sk).
+ * @param {boolean} [createFile=true] - If set to false and the file doesn't exist, it will throw an error.
  * @return {Promise<{pk: Uint8Array, sk: Uint8Array}>}
  */
-async function read_kp(file) {
+async function read_kp(file, createFile=true) {
     try {
         let sk = await fs.promises.readFile(file);
         return {
@@ -30,9 +31,12 @@ async function read_kp(file) {
             'sk': Uint8Array.from(sk)
         };
     } catch (error) {
-        let kp = generate_kp();
-        await fs.promises.writeFile(file, kp.sk);
-        return kp;
+        if (error.code === 'ENOENT' && createFile) {
+            let kp = generate_kp();
+            await fs.promises.writeFile(file, kp.sk);
+            return kp;
+        }
+        throw error;
     }
 }
 
