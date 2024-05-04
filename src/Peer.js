@@ -2,8 +2,7 @@ const net = require('net');
 const {EventEmitter} = require('events');
 const sodium = require('libsodium-wrappers-sumo');
 const RemotePeer = require('./RemotePeer');
-const helpers = require('./helpers');
-const {generate_kp} = require("./helpers");
+const {generate_kp} = require('./helpers');
 
 
 module.exports = class Peer extends EventEmitter {
@@ -63,9 +62,10 @@ module.exports = class Peer extends EventEmitter {
      * Listen for connection.
      * @param {string} [host='0.0.0.0']
      * @param {number} [port=0]
+     * @return {Promise<{stop: function, socket: net.Server}>}
      */
     listen(host='0.0.0.0', port=0) {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             let server = net.createServer((socket) => {
                 let remotePeer = undefined;
                 socket.once('readable', () => {
@@ -88,19 +88,23 @@ module.exports = class Peer extends EventEmitter {
                     socket.write(stream.header);
 
                     remotePeer = new RemotePeer(socket, clientPk, stream.state, pull_state);
+                    obj.emit('connection', remotePeer);
                     this.emit('connection', remotePeer);
                 });
 
                 socket.on('end', () => {
-                    if (remotePeer)
+                    if (remotePeer) {
+                        obj.emit('disconnection', remotePeer);
                         this.emit('disconnection', remotePeer);
+                    }
                 });
             });
 
-            server.on('listening', () => resolve({
-                stop: server.close,
-                socket: server
-            }));
+            let obj = new EventEmitter();
+            obj.stop = server.close;
+            obj.socket = server;
+
+            server.on('listening', () => resolve(obj));
             server.listen(port, host);
         });
     }
