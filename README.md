@@ -67,7 +67,7 @@ remotePeer.disconnect();
 
 ## Contact and donation
 
-Don't hesiate to contact me :
+Don't hesitate to contact me :
 > Mail : kapnak.mail@gmail.com  
 > Discord : kapnak
 
