@@ -1,5 +1,6 @@
 const fs = require('fs');
 const sodium = require('libsodium-wrappers-sumo');
+const {base32} = require('rfc4648');
 
 
 /**
@@ -36,7 +37,31 @@ async function read_kp(file) {
 }
 
 
+/**
+ * Encode bytes to a base32 string.
+ * It uses the RFC 4648 alphabet but in **lower case** and without padding.
+ * @param {ArrayLike} bytes - The bytes.
+ * @return {string} - The base 32 string.
+ */
+async function bytesToBs32(bytes){
+    return base32.stringify(bytes, {pad: false}).toLowerCase();
+}
+
+
+/**
+ * Decode a base 32 string to byte array.
+ * The string needs to follow the RFC 4648.
+ * @param {string} string - The base 32 string.
+ * @return {Promise<Uint8Array>}
+ */
+async function bs32toBytes(string) {
+    return base32.parse(string, {loose: true});
+}
+
+
 module.exports = {
     generate_kp,
-    read_kp
+    read_kp,
+    bytesToBs32,
+    bs32toBytes
 };
