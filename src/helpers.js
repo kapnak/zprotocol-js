@@ -1,5 +1,4 @@
 const fs = require('fs');
-const sodium = require('libsodium-wrappers-sumo');
 const {base32} = require('rfc4648');
 
 
@@ -8,7 +7,7 @@ const {base32} = require('rfc4648');
  * @return {{sk: Uint8Array, pk: Uint8Array}} - The generated key pair.
  */
 function generate_kp() {
-    let kp = sodium.crypto_sign_keypair();
+    let kp = global.sodium.crypto_sign_keypair();
     return {
         'pk': kp.publicKey,
         'sk': kp.privateKey
@@ -27,7 +26,7 @@ async function read_kp(file, createFile=true) {
     try {
         let sk = await fs.promises.readFile(file);
         return {
-            'pk': sodium.crypto_sign_ed25519_sk_to_pk(sk),
+            'pk': global.sodium.crypto_sign_ed25519_sk_to_pk(sk),
             'sk': Uint8Array.from(sk)
         };
     } catch (error) {

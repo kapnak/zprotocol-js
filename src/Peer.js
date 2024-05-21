@@ -1,6 +1,5 @@
 const net = require('net');
 const {EventEmitter} = require('events');
-const sodium = require('libsodium-wrappers-sumo');
 const RemotePeer = require('./RemotePeer');
 const {generate_kp} = require('./helpers');
 
@@ -18,8 +17,8 @@ module.exports = class Peer extends EventEmitter {
         super();
         this.kp = kp;
         this.curve25519kp = {
-            pk: sodium.crypto_sign_ed25519_pk_to_curve25519(this.kp.pk),
-            sk: sodium.crypto_sign_ed25519_sk_to_curve25519(this.kp.sk)
+            pk: global.sodium.crypto_sign_ed25519_pk_to_curve25519(this.kp.pk),
+            sk: global.sodium.crypto_sign_ed25519_sk_to_curve25519(this.kp.sk)
         };
     }
 
@@ -32,9 +31,9 @@ module.exports = class Peer extends EventEmitter {
      */
     connect(host, port, remotePk) {
         return new Promise((resolve) => {
-            let remoteCurve25519pk = sodium.crypto_sign_ed25519_pk_to_curve25519(remotePk);
-            let sharedKeys = sodium.crypto_kx_client_session_keys(this.curve25519kp.pk, this.curve25519kp.sk, remoteCurve25519pk);
-            let stream = sodium.crypto_secretstream_xchacha20poly1305_init_push(sharedKeys.sharedTx);
+            let remoteCurve25519pk = global.sodium.crypto_sign_ed25519_pk_to_curve25519(remotePk);
+            let sharedKeys = global.sodium.crypto_kx_client_session_keys(this.curve25519kp.pk, this.curve25519kp.sk, remoteCurve25519pk);
+            let stream = global.sodium.crypto_secretstream_xchacha20poly1305_init_push(sharedKeys.sharedTx);
             let push_state = stream.state;
 
             let socket = net.createConnection({host, port}, () => {
@@ -49,7 +48,7 @@ module.exports = class Peer extends EventEmitter {
                         socket.off('readable', getServerHeader);
                         // Get header from the server & generate the decryption cipher.
                         let header = socket.read(24);
-                        let pull_state = sodium.crypto_secretstream_xchacha20poly1305_init_pull(header, sharedKeys.sharedRx);
+                        let pull_state = global.sodium.crypto_secretstream_xchacha20poly1305_init_pull(header, sharedKeys.sharedRx);
                         resolve(new RemotePeer(socket, remotePk, push_state, pull_state));
                     }
                 }
@@ -79,10 +78,10 @@ module.exports = class Peer extends EventEmitter {
                     let header = socket.read(24);
 
                     // Generate shared keys.
-                    let remoteCurve25519pk = sodium.crypto_sign_ed25519_pk_to_curve25519(clientPk);
-                    let sharedKeys = sodium.crypto_kx_server_session_keys(this.curve25519kp.pk, this.curve25519kp.sk, remoteCurve25519pk);
-                    let stream = sodium.crypto_secretstream_xchacha20poly1305_init_push(sharedKeys.sharedTx);
-                    let pull_state = sodium.crypto_secretstream_xchacha20poly1305_init_pull(header, sharedKeys.sharedRx);
+                    let remoteCurve25519pk = global.sodium.crypto_sign_ed25519_pk_to_curve25519(clientPk);
+                    let sharedKeys = global.sodium.crypto_kx_server_session_keys(this.curve25519kp.pk, this.curve25519kp.sk, remoteCurve25519pk);
+                    let stream = global.sodium.crypto_secretstream_xchacha20poly1305_init_push(sharedKeys.sharedTx);
+                    let pull_state = global.sodium.crypto_secretstream_xchacha20poly1305_init_pull(header, sharedKeys.sharedRx);
 
                     // Send header
                     socket.write(stream.header);

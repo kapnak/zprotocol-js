@@ -1,7 +1,6 @@
 const {randomBytes} = require('crypto');
 const {EventEmitter} = require('events');
 const {Mutex} = require('async-mutex');
-const sodium = require('libsodium-wrappers-sumo')
 const Message = require('./Message');
 
 
@@ -53,7 +52,7 @@ module.exports = class RemotePeer extends EventEmitter {
             // If we are waiting for a message and all the bytes are available.
             if (this.metadata != null && this.socket.readableLength >= this.metadata.length) {
                 let chunk = this.socket.read(this.metadata.length);
-                let payload = sodium.crypto_secretstream_xchacha20poly1305_pull(this.pull_state, chunk);
+                let payload = global.sodium.crypto_secretstream_xchacha20poly1305_pull(this.pull_state, chunk);
                 let message = new Message(this.metadata.id, Buffer.from(payload.message), this);
 
                 /* Handle message */
@@ -110,8 +109,8 @@ module.exports = class RemotePeer extends EventEmitter {
      * @return {Buffer<16>} - The ID of the message sent.
      */
     send(payload, id=undefined) {
-        let messageEncrypted = sodium.crypto_secretstream_xchacha20poly1305_push(
-            this.push_state, payload, null, sodium.crypto_secretstream_xchacha20poly1305_TAG_MESSAGE
+        let messageEncrypted = global.sodium.crypto_secretstream_xchacha20poly1305_push(
+            this.push_state, payload, null, global.sodium.crypto_secretstream_xchacha20poly1305_TAG_MESSAGE
         );
         if (!id) {
             id = randomBytes(16);
