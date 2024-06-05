@@ -67,7 +67,11 @@ module.exports = class Peer extends EventEmitter {
         return new Promise((resolve) => {
             let server = net.createServer((socket) => {
                 let remotePeer = undefined;
-                socket.once('readable', () => {
+                let initializeConnection = () => {
+                    if (socket.readableLength < 89) {   // 89 is the length of client initialization message.
+                        socket.once('readable', initializeConnection);
+                        return;
+                    }
                     socket.read(1);     // First null char
                     let serverPk = socket.read(32);
                     if (!serverPk.equals(this.kp.pk)) {
@@ -89,7 +93,9 @@ module.exports = class Peer extends EventEmitter {
                     remotePeer = new RemotePeer(socket, clientPk, stream.state, pull_state);
                     obj.emit('connection', remotePeer);
                     this.emit('connection', remotePeer);
-                });
+                }
+
+                initializeConnection();
 
                 socket.on('end', () => {
                     if (remotePeer) {
